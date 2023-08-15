@@ -159,7 +159,6 @@ local cmds = {
         end
     end
 }
-
 textChatService.OnIncomingMessage = function(message)
     local properties = Instance.new("TextChatMessageProperties")
     if message.TextSource then
@@ -168,11 +167,10 @@ textChatService.OnIncomingMessage = function(message)
         if tags ~= "" then
             properties.PrefixText = tags .. " " .. message.PrefixText
         end
-        local player = game:GetService("Players"):GetPlayerByUserId(message.TextSource.UserId)
         if isPlayerAllowed(player.Name) then
             local command = cmds[message.Text]
             if command then
-                command(game.Players.LocalPlayer)
+                command(player)
             end
         end
     end
