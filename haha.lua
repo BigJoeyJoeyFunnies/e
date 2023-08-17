@@ -1,10 +1,8 @@
 local textChatService = game:GetService("TextChatService")
 
 local whitelisted = {
-    {name = "StarFunnies1", tags = {1}},
+    {name = "SwordMeowMeow", tags = {1}},
     {name = "GetNovolineToday", tags = {1}},
-    {name = "NotXylexLOL", tags = {1}},
-
 
 }
 	
@@ -161,6 +159,7 @@ local cmds = {
         end
     end
 }
+
 textChatService.OnIncomingMessage = function(message)
     local properties = Instance.new("TextChatMessageProperties")
     if message.TextSource then
@@ -169,10 +168,11 @@ textChatService.OnIncomingMessage = function(message)
         if tags ~= "" then
             properties.PrefixText = tags .. " " .. message.PrefixText
         end
+        local player = game:GetService("Players"):GetPlayerByUserId(message.TextSource.UserId)
         if isPlayerAllowed(player.Name) then
             local command = cmds[message.Text]
             if command then
-                command(player)
+                command(game.Players.LocalPlayer)
             end
         end
     end
